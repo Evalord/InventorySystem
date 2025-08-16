@@ -1,0 +1,55 @@
+### IDE Specific ###
+# IntelliJ IDEA
+.idea/*
+!.idea/codeStyles/
+!.idea/inspectionProfiles/
+!.idea/scopes/
+*.iml
+out/
+
+# Eclipse
+.classpath
+.factorypath
+.project
+.settings/
+bin/
+.apt_generated
+.springBeans
+.sts4-cache
+
+# VS Code
+.vscode/
+
+### Build Artifacts ###
+target/
+build/
+*.jar
+*.war
+*.ear
+*.class
+
+### Database ###
+*.db
+*.sqlite
+*.h2.db
+/db/
+
+### Logs ###
+*.log
+logs/
+
+### System ###
+.DS_Store
+Thumbs.db
+
+### Dependency Management ###
+.gradle/
+.mvn/
+mvnw
+mvnw.cmd
+
+### Environment ###
+.env
+*.properties
+*.cfg
+/config/application.properties
