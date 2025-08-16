@@ -1,136 +1,47 @@
 package com.inventory.core;
 
-import java.util.Objects;
+import java.util.concurrent.locks.*;
 
-/**
- * Represents a product in the inventory management system.
- * Includes validation for all fields and business logic for stock management.
- */
 public class Product {
-    private String id;
+    private final String id;
     private String name;
     private double price;
     private int quantity;
-    private String category;
+    final ReentrantLock lock = new ReentrantLock();
 
-    // Constructor with required fields
     public Product(String id, String name) {
-        setId(id);
-        setName(name);
-    }
-
-    // Full constructor
-    public Product(String id, String name, double price, int quantity, String category) {
-        this(id, name);
-        setPrice(price);
-        setQuantity(quantity);
-        setCategory(category);
-    }
-
-    // Getters
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    // Setters with validation
-    public void setId(String id) {
-        if (id == null || id.trim().isEmpty()) {
-            throw new IllegalArgumentException("Product ID cannot be null or empty");
-        }
         this.id = id;
-    }
-
-    public void setName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Product name cannot be null or empty");
-        }
         this.name = name;
     }
 
-    public void setPrice(double price) {
-        if (price < 0) {
-            throw new IllegalArgumentException("Price cannot be negative");
+    /* ----- Thread-Safe Methods ----- */
+
+    public void addStock(int amount) throws IllegalArgumentException {
+        lock.lock();
+        try {
+            if (amount <= 0) throw new IllegalArgumentException("Amount must be positive");
+            quantity += amount;
+        } finally {
+            lock.unlock();
         }
-        this.price = price;
     }
 
-    public void setQuantity(int quantity) {
-        if (quantity < 0) {
-            throw new IllegalArgumentException("Quantity cannot be negative");
+    public void removeStock(int amount) throws IllegalArgumentException {
+        lock.lock();
+        try {
+            if (amount <= 0) throw new IllegalArgumentException("Amount must be positive");
+            if (quantity < amount) throw new IllegalArgumentException("Insufficient stock");
+            quantity -= amount;
+        } finally {
+            lock.unlock();
         }
-        this.quantity = quantity;
     }
 
-    public void setCategory(String category) {
-        this.category = category; // Category can be null
-    }
-
-    // Business logic methods
-    /**
-     * Increases product quantity
-     * @param amount positive number to add
-     * @throws IllegalArgumentException if amount is not positive
-     */
-    public void addStock(int amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
-        }
-        this.quantity += amount;
-    }
-
-    /**
-     * Decreases product quantity
-     * @param amount positive number to deduct
-     * @throws IllegalArgumentException if amount is not positive or insufficient stock exists
-     */
-    public void removeStock(int amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
-        }
-        if (this.quantity < amount) {
-            throw new IllegalArgumentException("Insufficient stock");
-        }
-        this.quantity -= amount;
-    }
-
-    // Overrides
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Product product = (Product) o;
-        return Objects.equals(id, product.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return "Product{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", price=" + price +
-                ", quantity=" + quantity +
-                ", category='" + category + '\'' +
-                '}';
-    }
+    /* ----- Getters/Setters ----- */
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public double getPrice() { return price; }
+    public void setPrice(double price) { this.price = price; }
+    public int getQuantity() { return quantity; }
 }
