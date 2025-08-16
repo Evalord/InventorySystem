@@ -1,102 +1,116 @@
 package com.inventory.core;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 
-/**
- * Manages inventory operations with thread-safe implementations.
- * Uses ConcurrentHashMap for thread-safe product storage.
- */
 public class InventoryManager {
-    private final ConcurrentMap<String, Product> inventory;
+    private final ConcurrentMap<String, Product> inventory = new ConcurrentHashMap<>();
+    private final ReadWriteLock inventoryLock = new ReentrantReadWriteLock();
+    private final ExecutorService reportExecutor = Executors.newWorkStealingPool();
 
-    public InventoryManager() {
-        this.inventory = new ConcurrentHashMap<>();
+    // Custom exception for inventory operations
+    public static class InventoryException extends Exception {
+        public InventoryException(String message) { super(message); }
+        public InventoryException(String message, Throwable cause) { super(message, cause); }
     }
 
-    // Validation helper (now properly placed before usage)
-    private String validateProductId(String productId) {
-        if (productId == null || productId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Product ID cannot be null or empty");
-        }
-        return productId;
-    }
+    /* ----- Core Thread-Safe Operations ----- */
 
     /**
-     * Adds a new product to inventory
-     * @param product Product to add
-     * @throws IllegalArgumentException if product is null or already exists
+     * Transfers stock between products with deadlock prevention
+     * @return true if transfer succeeded, false if timed out
+     * @throws InventoryException for business logic errors
+     * @throws InterruptedException if thread interrupted
      */
-    public synchronized void addProduct(Product product) {
-        if (product == null) {
-            throw new IllegalArgumentException("Product cannot be null");
-        }
-        String productId = validateProductId(product.getId());
-        if (inventory.containsKey(productId)) {
-            throw new IllegalArgumentException("Product with ID " + productId + " already exists");
-        }
-        inventory.put(productId, product);
-    }
+    public boolean transferStock(String sourceId, String targetId, int amount,
+                                 long timeout, TimeUnit unit)
+            throws InventoryException, InterruptedException {
 
-    /**
-     * Removes a product from inventory
-     * @param productId ID of product to remove
-     * @return removed Product or null if not found
-     */
-    public synchronized Product removeProduct(String productId) {
-        return inventory.remove(validateProductId(productId));
-    }
+        // Validate parameters
+        if (amount <= 0) throw new InventoryException("Transfer amount must be positive");
+        if (sourceId.equals(targetId)) throw new InventoryException("Cannot transfer to same product");
 
-    /**
-     * Gets a product by ID
-     * @param productId ID to search for
-     * @return Product or null if not found
-     */
-    public Product getProduct(String productId) {
-        return inventory.get(validateProductId(productId));
-    }
-
-    /**
-     * Updates product stock (thread-safe)
-     * @param productId ID of product to update
-     * @param amount Positive to add, negative to remove
-     * @throws IllegalArgumentException if invalid amount or insufficient stock
-     */
-    public void updateStock(String productId, int amount) {
-        String validatedId = validateProductId(productId);
-        Product product = inventory.get(validatedId);
-        if (product == null) {
-            throw new IllegalArgumentException("Product with ID " + validatedId + " not found");
+        // Get products with thread-safe check
+        Product source = getProduct(sourceId);
+        Product target = getProduct(targetId);
+        if (source == null || target == null) {
+            throw new InventoryException("Product not found: " + (source == null ? sourceId : targetId));
         }
 
-        synchronized (product) {  // Fine-grained locking
-            if (amount > 0) {
-                product.addStock(amount);
-            } else if (amount < 0) {
-                product.removeStock(-amount);
-            } else {
-                throw new IllegalArgumentException("Amount cannot be zero");
+        // Establish global lock ordering
+        Product first, second;
+        if (source.getId().compareTo(target.getId()) < 0) {
+            first = source;
+            second = target;
+        } else {
+            first = target;
+            second = source;
+        }
+
+        // Attempt lock acquisition
+        boolean firstLocked = first.lock.tryLock(timeout, unit);
+        if (!firstLocked) return false;
+
+        try {
+            boolean secondLocked = second.lock.tryLock(timeout, unit);
+            if (!secondLocked) return false;
+
+            try {
+                // Perform the transfer
+                source.removeStock(amount);
+                target.addStock(amount);
+                return true;
+            } finally {
+                second.lock.unlock();
             }
+        } finally {
+            first.lock.unlock();
         }
     }
 
-    /**
-     * Returns all products (unmodifiable for thread safety)
-     * @return Collection of all products
-     */
-    public Collection<Product> getAllProducts() {
-        return Collections.unmodifiableCollection(inventory.values());
+    /* ----- Supporting Methods ----- */
+
+    public Product getProduct(String productId) throws InventoryException {
+        try {
+            inventoryLock.readLock().lock();
+            return inventory.get(validateId(productId));
+        } finally {
+            inventoryLock.readLock().unlock();
+        }
     }
 
-    /**
-     * Gets total inventory value
-     * @return Sum of (price * quantity) for all products
-     */
-    public double getTotalInventoryValue() {
-        return inventory.values().parallelStream()
-                .mapToDouble(p -> p.getPrice() * p.getQuantity())
-                .sum();
+    public void addProduct(Product product) throws InventoryException {
+        Objects.requireNonNull(product, "Product cannot be null");
+        inventoryLock.writeLock().lock();
+        try {
+            String id = validateId(product.getId());
+            if (inventory.putIfAbsent(id, product) != null) {
+                throw new InventoryException("Product already exists: " + id);
+            }
+        } finally {
+            inventoryLock.writeLock().unlock();
+        }
+    }
+
+    /* ----- Utility Methods ----- */
+
+    private String validateId(String id) throws InventoryException {
+        if (id == null || id.trim().isEmpty()) {
+            throw new InventoryException("Product ID cannot be null or empty");
+        }
+        return id;
+    }
+
+    public void shutdown() {
+        reportExecutor.shutdown();
+        try {
+            if (!reportExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                reportExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            reportExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }
