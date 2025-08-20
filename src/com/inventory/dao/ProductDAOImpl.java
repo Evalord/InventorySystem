@@ -4,111 +4,120 @@ import com.inventory.core.Product;
 import com.inventory.core.InventoryException;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProductDAOImpl implements ProductDAO {
 
-    // No need for enableForeignKeys() for PostgreSQL as it's enabled by default
-    // and handled by the database itself.
-
     @Override
     public void addProduct(Product product) throws InventoryException {
-        // PostgreSQL's SERIAL primary key is auto-generated.
-        // DO NOT include 'product_id' in the INSERT statement.
-        String sql = "INSERT INTO products (name, description, price, category) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection()) {
-            try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql = "INSERT INTO products (name, description, price, quantity, category) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-                pstmt.setString(1, product.getName());
-                pstmt.setString(2, product.getDescription());
-                pstmt.setDouble(3, product.getPrice());
-                pstmt.setString(4, product.getCategory());
+            pstmt.setString(1, product.getName());
+            pstmt.setString(2, product.getDescription());
+            pstmt.setDouble(3, product.getPrice());
+            pstmt.setInt(4, product.getQuantity());
+            pstmt.setString(5, product.getCategory());
 
-                int affectedRows = pstmt.executeUpdate();
-                if (affectedRows == 0) {
-                    throw new InventoryException("Creating product failed, no rows affected.");
-                }
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new InventoryException("Creating product failed, no rows affected.");
+            }
 
-                // Retrieve the database-generated ID (product_id)
-                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        int generatedId = generatedKeys.getInt(1); // PostgreSQL returns the SERIAL column
-                        // You can optionally update the Product object's ID if needed
-                        // product.setId(String.valueOf(generatedId)); // If Product class had setId()
-                        System.out.println("ProductDAOImpl: Product added with generated ID: " + generatedId);
-                    } else {
-                        throw new InventoryException("Creating product failed, no ID obtained.");
-                    }
+            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    int generatedId = generatedKeys.getInt(1);
+                    product.setId(String.valueOf(generatedId));
+                    System.out.println("ProductDAOImpl: Product added with generated ID: " + generatedId);
+                } else {
+                    throw new InventoryException("Creating product failed, no ID obtained.");
                 }
             }
         } catch (SQLException e) {
-            // PostgreSQL unique constraint violation error code is '23505'
-            if (e.getSQLState().equals("23505")) {
-                throw new InventoryException("A product with the same name (or other unique field) already exists.", e);
-            }
             throw new InventoryException("Database error while adding product: " + e.getMessage(), e);
         }
     }
 
     @Override
     public Product getProductById(String productId) throws InventoryException {
-        // Convert the String productId from the Product object to an int for database lookup.
-        int id;
-        try {
-            id = Integer.parseInt(productId);
-        } catch (NumberFormatException e) {
-            throw new InventoryException("Invalid Product ID format: " + productId + ". ID must be a valid integer.", e);
-        }
-
-        String sql = "SELECT product_id, name, description, price, category FROM products WHERE product_id = ?";
+        String sql = "SELECT product_id, name, description, price, quantity, category FROM products WHERE product_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, id); // Use setInt for the integer ID
+            int id = Integer.parseInt(productId);
+            pstmt.setInt(1, id);
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    // Convert the int product_id from the database back to a String for the Product object.
                     return new Product(
                             String.valueOf(rs.getInt("product_id")),
                             rs.getString("name"),
                             rs.getString("description"),
                             rs.getDouble("price"),
-                            0, // Quantity will be calculated separately by calculateProductQuantity
+                            rs.getInt("quantity"),
                             rs.getString("category")
                     );
                 } else {
                     throw new InventoryException("Product not found with ID: " + productId);
                 }
             }
+        } catch (NumberFormatException e) {
+            throw new InventoryException("Invalid Product ID format: " + productId, e);
         } catch (SQLException e) {
             throw new InventoryException("Database error while retrieving product: " + e.getMessage(), e);
         }
     }
 
     @Override
-    public void updateProduct(Product product) throws InventoryException {
-        // Convert the String productId from the Product object to an int for database lookup.
-        int id;
-        try {
-            id = Integer.parseInt(product.getId());
-        } catch (NumberFormatException e) {
-            throw new InventoryException("Invalid Product ID format for update: " + product.getId() + ". ID must be a valid integer.", e);
-        }
+    public Product getProductByName(String productName) throws InventoryException {
+        String sql = "SELECT product_id, name, description, price, quantity, category FROM products WHERE name = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        String sql = "UPDATE products SET name = ?, description = ?, price = ?, category = ? WHERE product_id = ?";
-        try (Connection conn = DBConnection.getConnection()) {
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, product.getName());
-                pstmt.setString(2, product.getDescription());
-                pstmt.setDouble(3, product.getPrice());
-                pstmt.setString(4, product.getCategory());
-                pstmt.setInt(5, id);
+            pstmt.setString(1, productName.trim());
 
-                int affectedRows = pstmt.executeUpdate();
-                if (affectedRows == 0) {
-                    throw new InventoryException("Product not found for update with ID: " + product.getId());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Product(
+                            String.valueOf(rs.getInt("product_id")),
+                            rs.getString("name"),
+                            rs.getString("description"),
+                            rs.getDouble("price"),
+                            rs.getInt("quantity"),
+                            rs.getString("category")
+                    );
+                } else {
+                    throw new InventoryException("Product not found with name: " + productName);
                 }
             }
+        } catch (SQLException e) {
+            throw new InventoryException("Database error while retrieving product by name: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void updateProduct(Product product) throws InventoryException {
+        String sql = "UPDATE products SET name = ?, description = ?, price = ?, quantity = ?, category = ? WHERE product_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, product.getName());
+            pstmt.setString(2, product.getDescription());
+            pstmt.setDouble(3, product.getPrice());
+            pstmt.setInt(4, product.getQuantity());
+            pstmt.setString(5, product.getCategory());
+
+            int id = Integer.parseInt(product.getId());
+            pstmt.setInt(6, id);
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new InventoryException("Product not found for update with ID: " + product.getId());
+            }
+        } catch (NumberFormatException e) {
+            throw new InventoryException("Invalid Product ID format: " + product.getId(), e);
         } catch (SQLException e) {
             throw new InventoryException("Database error while updating product: " + e.getMessage(), e);
         }
@@ -116,21 +125,17 @@ public class ProductDAOImpl implements ProductDAO {
 
     @Override
     public boolean deleteProduct(String productId) throws InventoryException {
-        // Convert the String productId to an int for database deletion.
-        int id;
-        try {
-            id = Integer.parseInt(productId);
-        } catch (NumberFormatException e) {
-            throw new InventoryException("Invalid Product ID format for deletion: " + productId + ". ID must be a valid integer.", e);
-        }
-
         String sql = "DELETE FROM products WHERE product_id = ?";
-        try (Connection conn = DBConnection.getConnection()) {
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, id);
-                int affectedRows = pstmt.executeUpdate();
-                return affectedRows > 0;
-            }
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            int id = Integer.parseInt(productId);
+            pstmt.setInt(1, id);
+
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (NumberFormatException e) {
+            throw new InventoryException("Invalid Product ID format: " + productId, e);
         } catch (SQLException e) {
             throw new InventoryException("Database error while deleting product: " + e.getMessage(), e);
         }
@@ -138,45 +143,40 @@ public class ProductDAOImpl implements ProductDAO {
 
     @Override
     public int calculateProductQuantity(String productId) throws InventoryException {
-        // Convert the String productId to an int for database calculations.
-        int id;
+        // Implementation for calculating quantity from purchases/sales
+        // This is a placeholder - you'll need to implement based on your database schema
         try {
-            id = Integer.parseInt(productId);
-        } catch (NumberFormatException e) {
-            throw new InventoryException("Invalid Product ID format for quantity calculation: " + productId + ". ID must be a valid integer.", e);
+            Product product = getProductById(productId);
+            return product.getQuantity(); // For now, just return stored quantity
+        } catch (InventoryException e) {
+            throw new InventoryException("Error calculating quantity for product: " + productId, e);
         }
+    }
 
-        int totalPurchased = 0;
-        int totalSold = 0;
+    @Override
+    public List<Product> getAllProducts() throws InventoryException {
+        List<Product> products = new ArrayList<>();
+        String sql = "SELECT product_id, name, description, price, quantity, category FROM products ORDER BY name";
 
-        String purchaseSql = "SELECT COALESCE(SUM(quantity), 0) FROM purchases WHERE product_id = ?";
-        try (Connection conn = DBConnection.getConnection()) {
-            try (PreparedStatement pstmt = conn.prepareStatement(purchaseSql)) {
-                pstmt.setInt(1, id);
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    if (rs.next()) {
-                        totalPurchased = rs.getInt(1);
-                    }
-                }
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                Product product = new Product(
+                        String.valueOf(rs.getInt("product_id")),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getDouble("price"),
+                        rs.getInt("quantity"),
+                        rs.getString("category")
+                );
+                products.add(product);
             }
         } catch (SQLException e) {
-            throw new InventoryException("Database error while calculating purchases for product " + productId + ": " + e.getMessage(), e);
+            throw new InventoryException("Database error while retrieving all products: " + e.getMessage(), e);
         }
 
-        String saleSql = "SELECT COALESCE(SUM(quantity), 0) FROM sales WHERE product_id = ?";
-        try (Connection conn = DBConnection.getConnection()) {
-            try (PreparedStatement pstmt = conn.prepareStatement(saleSql)) {
-                pstmt.setInt(1, id);
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    if (rs.next()) {
-                        totalSold = rs.getInt(1);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            throw new InventoryException("Database error while calculating sales for product " + productId + ": " + e.getMessage(), e);
-        }
-
-        return totalPurchased - totalSold;
+        return products;
     }
 }

@@ -2,6 +2,7 @@ package com.inventory.dao;
 
 import com.inventory.core.Product;
 import com.inventory.core.InventoryException;
+import java.util.List;
 
 /**
  * Data Access Object (DAO) interface for Product entities.
@@ -25,6 +26,15 @@ public interface ProductDAO {
      * or if a database error occurs.
      */
     Product getProductById(String productId) throws InventoryException;
+
+    /**
+     * Retrieves a product record from the database by its name.
+     * @param productName The name of the product to retrieve.
+     * @return The Product object corresponding to the given name.
+     * @throws InventoryException if the product is not found,
+     * or if a database error occurs.
+     */
+    Product getProductByName(String productName) throws InventoryException;
 
     /**
      * Updates an existing product record in the database.
@@ -52,4 +62,11 @@ public interface ProductDAO {
      * or if a database error occurs.
      */
     int calculateProductQuantity(String productId) throws InventoryException;
+
+    /**
+     * Retrieves all products from the database.
+     * @return List of all Product objects.
+     * @throws InventoryException if a database error occurs.
+     */
+    List<Product> getAllProducts() throws InventoryException;
 }

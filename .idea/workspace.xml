@@ -4,7 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a117b420-e0b8-4c66-ae58-38416ade02eb" name="Changes" comment="Merge branch 'core_logic'" />
+    <list default="true" id="a117b420-e0b8-4c66-ae58-38416ade02eb" name="Changes" comment="Merge branch 'feature/thread-safety' into dev&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/InventorySystem.iml" beforeDir="false" afterPath="$PROJECT_DIR$/InventorySystem.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/inventory/InventorySystem.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/InventorySystem.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/inventory/core/InventoryManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/core/InventoryManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/inventory/core/Product.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/core/Product.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/inventory/dao/DBConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/dao/DBConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/inventory/dao/ProductDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/dao/ProductDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/inventory/dao/ProductDAOImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/dao/ProductDAOImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/inventory/ui/MainMenu.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/ui/MainMenu.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -43,16 +54,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
-    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/23765/IdeaProjects/InventorySystem/src/Main.java&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.InventorySystem.executor": "Run",
+    "Application.MainMenu.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "Merging dev",
+    "onboarding.tips.debug.path": "C:/Users/23765/IdeaProjects/InventorySystem/src/Main.java",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\23765\IdeaProjects\InventorySystem" />
+    </key>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="a117b420-e0b8-4c66-ae58-38416ade02eb" name="Changes" comment="" />
@@ -93,16 +114,5 @@
     <MESSAGE value="structure" />
     <MESSAGE value="Merge branch 'core_logic'" />
     <option name="LAST_COMMIT_MESSAGE" value="Merge branch 'core_logic'" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Main.java</url>
-          <line>11</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

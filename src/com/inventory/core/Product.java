@@ -7,29 +7,22 @@ import java.util.concurrent.locks.*;
  * Thread-safe product entity with inventory management capabilities.
  */
 public class Product {
-    private String id; // Changed to String to match the DAO interface's usage, but DB uses INT
+    private String id; // This MUST be int to match PostgreSQL's SERIAL
     private String name;
     private String description;
     private double price;
     private int quantity;
-    private String category; // Added category based on the provided Product constructor
+    private String category;
     private final Lock lock = new ReentrantLock();
 
-    // Constructor with minimum required fields (ID should map to product_id in DB, which is SERIAL/int)
-    public Product(String id, String name) {
-        this(id, name, null, 0.0, 0, null);
+    // Constructor for NEW products (ID is not known yet, DB will generate it)
+    public Product(String name, String description, double price, String category) {
+        this(null,name, description, price, 0, category);
     }
 
-    // Constructor for common use case with price, quantity, category
-    public Product(String id, String name, double price, int quantity, String category) {
-        this(id, name, null, price, quantity, category);
-    }
-
-    // Comprehensive constructor for all fields
+    // Constructor for retrieving EXISTING products from the database
+    // or for comprehensive initialization where ID is known.
     public Product(String id, String name, String description, double price, int quantity, String category) {
-        if (id == null || id.trim().isEmpty()) {
-            throw new IllegalArgumentException("Product ID cannot be null or empty");
-        }
         this.id = id;
         this.name = name;
         this.description = description;
@@ -38,50 +31,16 @@ public class Product {
         this.category = category;
     }
 
-    /* ----- Thread-Safe Methods ----- */
-
-    /**
-     * Adds stock to product inventory.
-     * @param amount Positive quantity to add.
-     * @throws IllegalArgumentException if amount is not positive.
-     */
-    public void addStock(int amount) throws IllegalArgumentException {
-        lock.lock();
-        try {
-            if (amount <= 0) {
-                throw new IllegalArgumentException("Amount must be positive");
-            }
-            quantity += amount;
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Removes stock from product inventory.
-     * @param amount Positive quantity to remove.
-     * @throws IllegalArgumentException if amount invalid or insufficient stock.
-     */
-    public void removeStock(int amount) throws IllegalArgumentException {
-        lock.lock();
-        try {
-            if (amount <= 0) {
-                throw new IllegalArgumentException("Amount must be positive");
-            }
-            if (quantity < amount) {
-                throw new IllegalArgumentException(
-                        String.format("Insufficient stock. Available: %d, Requested: %d",
-                                quantity, amount));
-            }
-            quantity -= amount;
-        } finally {
-            lock.unlock();
-        }
-    }
-
     /* ----- Getters/Setters ----- */
-    public String getId() { return id; }
-    // No setter for ID as it's typically immutable after creation
+    // Getter for ID (returns int)
+    public String getId() {
+        return id;
+    }
+
+    // Setter for ID (used by DAO after DB insertion)
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public Lock getLock(){
         return this.lock;
@@ -150,7 +109,7 @@ public class Product {
         }
     }
 
-    public void setQuantity(int quantity) { // Added setter for quantity
+    public void setQuantity(int quantity) {
         lock.lock();
         try {
             this.quantity = quantity;
@@ -177,18 +136,60 @@ public class Product {
         }
     }
 
+    /* ----- Thread-Safe Methods (remain as they were) ----- */
+
+    /**
+     * Adds stock to product inventory.
+     * @param amount Positive quantity to add.
+     * @throws IllegalArgumentException if amount is not positive.
+     */
+    public void addStock(int amount) throws IllegalArgumentException {
+        lock.lock();
+        try {
+            if (amount <= 0) {
+                throw new IllegalArgumentException("Amount must be positive");
+            }
+            quantity += amount;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Removes stock from product inventory.
+     * @param amount Positive quantity to remove.
+     * @throws IllegalArgumentException if amount invalid or insufficient stock.
+     */
+    public void removeStock(int amount) throws IllegalArgumentException {
+        lock.lock();
+        try {
+            if (amount <= 0) {
+                throw new IllegalArgumentException("Amount must be positive");
+            }
+            if (quantity < amount) {
+                throw new IllegalArgumentException(
+                        String.format("Insufficient stock. Available: %d, Requested: %d",
+                                quantity, amount));
+            }
+            quantity -= amount;
+        } finally {
+            lock.unlock();
+        }
+    }
+
     /* ----- Object Overrides ----- */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Product product = (Product) o;
-        return Objects.equals(id, product.id);
+        // Compare based on int ID
+        return id == product.id; // Corrected comparison for int
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(id); // Corrected hashing for int
     }
 
     @Override
@@ -196,7 +197,7 @@ public class Product {
         lock.lock();
         try {
             return "Product{" +
-                    "id='" + id + '\'' +
+                    "id=" + id + // Removed single quotes for int
                     ", name='" + name + '\'' +
                     ", description='" + description + '\'' +
                     ", price=" + price +
