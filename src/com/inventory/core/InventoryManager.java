@@ -11,8 +11,13 @@ public class InventoryManager {
 
     // Custom exception for inventory operations
     public static class InventoryException extends Exception {
-        public InventoryException(String message) { super(message); }
-        public InventoryException(String message, Throwable cause) { super(message, cause); }
+        public InventoryException(String message) {
+            super(message);
+        }
+
+        public InventoryException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 
     /* ----- Core Thread-Safe Operations ----- */
@@ -49,23 +54,27 @@ public class InventoryManager {
         }
 
         // Attempt lock acquisition
-        boolean firstLocked = first.lock.tryLock(timeout, unit);
+        boolean firstLocked = first.getLock().tryLock(timeout, unit);
         if (!firstLocked) return false;
 
         try {
-            boolean secondLocked = second.lock.tryLock(timeout, unit);
+            boolean secondLocked = second.getLock().tryLock(timeout, unit);
             if (!secondLocked) return false;
 
             try {
                 // Perform the transfer
+                if (source.getQuantity() < amount) {
+                    throw new InventoryException("Insufficient stock in source product:" + sourceId);
+
+                }
                 source.removeStock(amount);
                 target.addStock(amount);
                 return true;
             } finally {
-                second.lock.unlock();
+                second.getLock().unlock();
             }
         } finally {
-            first.lock.unlock();
+            first.getLock().unlock();
         }
     }
 
@@ -113,4 +122,5 @@ public class InventoryManager {
             Thread.currentThread().interrupt();
         }
     }
+
 }
