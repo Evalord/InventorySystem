@@ -5,9 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a117b420-e0b8-4c66-ae58-38416ade02eb" name="Changes" comment="Merge branch 'core_logic'">
+      <change afterPath="$PROJECT_DIR$/src/com/inventory/InventorySystem.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/com/inventory/core/InventoryException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/com/inventory/dao/ProductDAOImpl.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/com/inventory/core/InventoryManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/core/InventoryManager.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/com/inventory/core/Product.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/core/Product.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/inventory/dao/DBConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/dao/DBConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/inventory/dao/ProductDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/dao/ProductDAO.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,16 +52,16 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "dev",
-    "onboarding.tips.debug.path": "C:/Users/23765/IdeaProjects/InventorySystem/src/Main.java"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
+    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/23765/IdeaProjects/InventorySystem/src/Main.java&quot;
   }
-}]]></component>
+}</component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="a117b420-e0b8-4c66-ae58-38416ade02eb" name="Changes" comment="" />
@@ -105,11 +110,6 @@
           <url>file://$PROJECT_DIR$/src/Main.java</url>
           <line>11</line>
           <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/com/inventory/core/InventoryManager.java</url>
-          <line>9</line>
-          <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
