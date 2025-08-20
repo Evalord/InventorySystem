@@ -4,16 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a117b420-e0b8-4c66-ae58-38416ade02eb" name="Changes" comment="Merge branch 'core_logic'">
-      <change afterPath="$PROJECT_DIR$/src/com/inventory/InventorySystem.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/com/inventory/core/InventoryException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/com/inventory/dao/ProductDAOImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/inventory/core/InventoryManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/core/InventoryManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/inventory/core/Product.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/core/Product.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/inventory/dao/DBConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/dao/DBConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/inventory/dao/ProductDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/inventory/dao/ProductDAO.java" afterDir="false" />
-    </list>
+    <list default="true" id="a117b420-e0b8-4c66-ae58-38416ade02eb" name="Changes" comment="Merge branch 'core_logic'" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
